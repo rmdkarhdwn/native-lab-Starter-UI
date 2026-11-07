@@ -7,6 +7,5 @@ export interface DiagnosticResult { status: DiagnosticStatus; source: DataSource
 export interface DiagnosticDefinition {
   id: DiagnosticId; eyebrow: string; title: string; subtitle: string; description: string;
   action: string; initialLabel: string; gradient: readonly [string, string]; panel: string;
-  light: number; lightWidth: number; lightHeight: number; lightLeft: number; lightTop: number;
 }
 export interface DiagnosticService { run(id: DiagnosticId): Promise<DiagnosticResult> }
