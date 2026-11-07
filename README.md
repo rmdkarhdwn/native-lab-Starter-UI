@@ -58,6 +58,67 @@ npx expo start
 
 스타터 프로젝트의 UI는 Expo Go에서 확인할 수 있도록 구성합니다.
 
+## 사용법
+
+대시보드의 카드를 눌러 상세 화면으로 이동합니다. 실행 버튼은 **아직 연결되지 않았습니다** 안내만 표시합니다. 상세 화면의 개발용 미리보기는 측정 전, 측정 중, 완료, 오류 UI를 확인하기 위한 예시이며, 표시되는 값과 상태는 실제 기기에서 가져온 정보가 아닙니다. 권한과 마지막 체크 역시 실제 조회나 저장을 하지 않습니다.
+
+## 구조와 실습 연결 지점
+
+```text
+src/
+├── app/                           # URL 경로와 화면 진입점
+│   ├── _layout.tsx                # 공통 안전 영역, 상태바, Stack 설정
+│   ├── index.tsx                  # 홈 경로 → DashboardScreen
+│   └── diagnostic/
+│       └── [id].tsx               # 진단 ID 검증 → DiagnosticScreen
+├── screens/                       # 화면 구성과 사용자 동작 처리
+│   ├── DashboardScreen.tsx        # 진단 카드 목록, 권한·마지막 체크 안내
+│   ├── DashboardScreen.styles.ts  # 대시보드 배치와 간격
+│   ├── DiagnosticScreen.tsx       # 진단 정보, 상태 미리보기, 실행 버튼
+│   └── DiagnosticScreen.styles.ts # 상세 화면 배치와 간격
+├── components/                    # 화면에서 재사용하는 UI
+│   ├── DiagnosticCard.tsx         # 진단 카드 표시와 클릭 전달
+│   ├── DiagnosticCard.styles.ts   # 카드 색상 배경, 크기, 글자 스타일
+│   ├── Status.tsx                 # StatusBadge와 StatusMessage
+│   └── Status.styles.ts           # 상태 배지와 안내 영역 스타일
+├── mocks/
+│   └── diagnostics.ts             # 진단 항목 정의, 초기 결과, 예시 결과
+├── services/
+│   └── diagnosticService.ts       # 실제 진단 기능을 연결할 서비스 구현부
+├── theme/
+│   ├── colors.ts                  # 공통 색상
+│   └── layout.styles.ts           # 앱 공통 안전 영역과 화면 배경
+└── types/
+    └── diagnostic.ts              # 진단 ID, 상태, 결과, 서비스 계약 타입
+```
+
+### 화면과 데이터가 연결되는 흐름
+
+1. `app/index.tsx`가 `DashboardScreen`을 표시합니다. 대시보드는 `mocks/diagnostics.ts`의 진단 항목을 카드로 그립니다.
+2. 카드를 누르면 `/diagnostic/[id]`로 이동합니다. `[id].tsx`는 ID가 유효한지 확인하고, 알 수 없는 ID는 홈으로 돌려보냅니다.
+3. `DiagnosticScreen`은 `initialResult(id)`로 초기 상태를 만듭니다. 실행 버튼은 `diagnosticService.run(id)`를 호출하고 반환된 결과를 화면에 반영합니다.
+4. 개발용 미리보기는 서비스를 호출하지 않고 `initialResult` 또는 `mockResult`로 화면 상태만 바꿉니다. 실제 측정이나 저장은 하지 않습니다.
+5. `StatusBadge`와 `StatusMessage`가 결과의 상태와 안내 문구를 표시합니다. 진단 종류가 달라도 같은 UI를 사용합니다.
+
+### 수정할 파일 찾기
+
+| 수정하려는 내용 | 파일 |
+| --- | --- |
+| 화면에 표시할 진단 이름·설명·카드 그라데이션 | `src/mocks/diagnostics.ts` |
+| 대시보드 카드 순서와 배치 | `src/screens/DashboardScreen.tsx` |
+| 상세 화면 구성·실행·미리보기 동작 | `src/screens/DiagnosticScreen.tsx` |
+| 화면의 여백·크기·정렬 | 해당 화면의 `.styles.ts` |
+| 공통 카드·상태 표시 | `src/components/`의 `.tsx`와 `.styles.ts` |
+| 경로·ID 검증·공통 내비게이션 설정 | `src/app/` |
+| 실제 기기 기능 호출 | `src/services/diagnosticService.ts` |
+| 서비스 결과 형식과 상태 종류 | `src/types/diagnostic.ts` |
+
+스타일은 사용하는 화면이나 컴포넌트 옆의 `.styles.ts`에서 관리합니다. 진단별 배경색처럼 데이터에 따라 달라지는 값은 `.tsx`에서 스타일과 조합합니다. `src/app/`에는 라우트 파일만 두고, 재사용 UI와 스타일은 다른 폴더에 둡니다.
+
+### 실제 기능 연결
+
+강의에서는 `DiagnosticService` 계약을 유지하면서 서비스를 실제 구현으로 교체하고, 결과의 `source`, `status`, `rows`, `checkedAt`을 연결하세요. 권한 상태와 마지막 체크의 저장 및 갱신은 별도로 구현해야 합니다. 카메라 미리보기나 센서 스트림처럼 지속적인 네이티브 연동이 필요한 기능도 현재 비어 있습니다. 이 프로젝트에는 Kotlin/Swift 코드, 네이티브 이벤트 구독, 기기 접근 권한 설정이 없습니다.
+
 ## 네이티브 프로젝트 생성
 
 강의에서는 Expo Prebuild를 사용해 Android와 iOS 네이티브 프로젝트를 생성합니다.
